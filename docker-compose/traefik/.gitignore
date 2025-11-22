@@ -1,0 +1,17 @@
+# Environment file with secrets
+.env
+
+# Let's Encrypt certificates and data
+letsencrypt/
+
+# Log files
+logs/
+*.log
+
+# Dynamic configuration (may contain secrets)
+dynamic/*.yml
+dynamic/*.yaml
+
+# Backup files
+*.bak
+*~

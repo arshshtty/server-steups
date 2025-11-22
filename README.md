@@ -19,6 +19,7 @@ server-steups/
 │   ├── setup-minimal.sh      # Minimal server setup
 │   └── verify.sh             # Installation verification
 ├── docker-compose/           # Docker Compose configurations
+│   ├── traefik/              # Reverse proxy with auto HTTPS ✓
 │   ├── ntfy/                 # Push notification service
 │   ├── n8n/                  # Workflow automation
 │   └── gitea/                # Self-hosted Git
@@ -80,8 +81,12 @@ nano .env  # Configure your settings
 docker-compose up -d
 ```
 
-## Planned Self-Hosted Applications
+## Self-Hosted Applications
 
+### Available Now
+- **Traefik** ✓ - Reverse proxy with automatic HTTPS via Let's Encrypt ([docker-compose/traefik](docker-compose/traefik/README.md))
+
+### Planned
 - **ntfy** - Push notifications to your phone or desktop
 - **n8n** - Workflow automation (alternative to Zapier)
 - **Gitea** - Lightweight self-hosted Git service
@@ -89,7 +94,6 @@ docker-compose up -d
 - **Vaultwarden** - Password manager (Bitwarden-compatible)
 - **Nextcloud** - File sync and sharing
 - **Jellyfin** - Media streaming server
-- **Traefik/Caddy** - Reverse proxy with automatic HTTPS
 
 ## Directory Guides
 
@@ -179,11 +183,11 @@ MIT License - Use freely for personal or commercial projects.
 
 ## Roadmap
 
+- [x] Add Traefik reverse proxy
 - [ ] Add ntfy setup
 - [ ] Add n8n with PostgreSQL
 - [ ] Add Gitea configuration
 - [ ] Create backup automation script
-- [ ] Add Traefik reverse proxy
 - [ ] Add monitoring stack (Prometheus + Grafana)
 - [ ] Create update automation
 - [ ] Add security hardening scripts
