@@ -1,0 +1,15 @@
+# Environment files
+.env
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Backup files
+*.tar.gz
+*.zip
+*.bak
