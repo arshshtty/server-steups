@@ -44,6 +44,9 @@ curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup.sh | bash
 
 # Or minimal setup (production servers)
 curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup-minimal.sh | bash
+
+# Preview changes without installing (dry-run)
+bash <(curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup.sh) --dry-run
 ```
 
 **What gets installed:**
@@ -52,6 +55,16 @@ curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup-minimal.s
 - Python 3 + pip + uv
 - Docker + Docker Compose
 - Essential CLI tools (git, curl, vim, htop, tmux, fzf, bat, ripgrep)
+
+**New in v2.0:**
+- ✨ Dry-run mode to preview changes
+- ✅ Post-installation verification
+- ⚙️ Configuration file support
+- 🧩 Modular architecture
+- 📝 Optional logging
+- 🎛️ Component selection (--no-docker, --no-node, etc.)
+
+See [base/README.md](base/README.md) for detailed documentation and all options.
 
 ### 2. Deploy Self-Hosted Applications
 

@@ -1,251 +1,333 @@
 #!/bin/bash
-set -e
+# Debian/Ubuntu VM/Container Setup Script
+# Full-featured setup with all development tools
+# Version: 2.0.0
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Determine script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+# Source common library
+# shellcheck source=base/lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+
+# Source installation modules
+# shellcheck source=base/lib/install-zsh.sh
+source "$SCRIPT_DIR/lib/install-zsh.sh"
+# shellcheck source=base/lib/install-node.sh
+source "$SCRIPT_DIR/lib/install-node.sh"
+# shellcheck source=base/lib/install-python.sh
+source "$SCRIPT_DIR/lib/install-python.sh"
+# shellcheck source=base/lib/install-docker.sh
+source "$SCRIPT_DIR/lib/install-docker.sh"
+# shellcheck source=base/lib/install-extras.sh
+source "$SCRIPT_DIR/lib/install-extras.sh"
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+# Set defaults
+INSTALL_ZSH="${INSTALL_ZSH:-true}"
+INSTALL_NODE="${INSTALL_NODE:-true}"
+INSTALL_PYTHON="${INSTALL_PYTHON:-true}"
+INSTALL_DOCKER="${INSTALL_DOCKER:-true}"
+INSTALL_EXTRAS="${INSTALL_EXTRAS:-true}"
+UPDATE_PACKAGES="${UPDATE_PACKAGES:-true}"
+UPGRADE_SYSTEM="${UPGRADE_SYSTEM:-true}"
+RUN_VERIFICATION="${RUN_VERIFICATION:-true}"
+SHOW_SUMMARY="${SHOW_SUMMARY:-true}"
+
+# Load configuration from file if it exists
+for config in "$SCRIPT_DIR/config/default.conf" /etc/setup-config "$HOME/.setup-config"; do
+    if [ -f "$config" ]; then
+        log_debug "Loading configuration from $config"
+        # shellcheck source=/dev/null
+        source "$config"
+        break
+    fi
+done
+
+# ============================================================================
+# Help Function
+# ============================================================================
+
+show_help() {
+    cat << EOF
+Debian/Ubuntu VM/Container Setup Script v2.0.0
+
+Usage: $0 [OPTIONS]
+
+A comprehensive setup script for quickly configuring new Debian/Ubuntu
+virtual machines and containers with essential development tools.
+
+OPTIONS:
+    --dry-run              Show what would be installed without making changes
+    -v, --verbose          Enable verbose output
+    --log-file FILE        Write log to specified file
+    --skip-verification    Skip post-installation verification
+    --version              Show version and exit
+    -h, --help             Show this help message
+
+COMPONENT SELECTION:
+    --no-zsh               Skip Zsh and Oh My Zsh installation
+    --no-node              Skip Node.js installation
+    --no-python            Skip Python installation
+    --no-docker            Skip Docker installation
+    --no-extras            Skip additional utilities installation
+    --no-updates           Skip system package updates
+
+CONFIGURATION:
+    Configuration can be customized by:
+    1. Exporting environment variables
+    2. Creating ~/.setup-config or /etc/setup-config
+    3. Editing $SCRIPT_DIR/config/default.conf
+
+    See config/default.conf for all available options.
+
+WHAT GETS INSTALLED:
+    Core Development Tools:
+    - Zsh with Oh My Zsh and plugins
+    - Node.js (LTS) + npm + npx
+    - Python 3 + pip + venv + uv
+    - Docker + Docker Compose
+
+    Additional Utilities:
+    - git, curl, wget, vim, htop, tmux
+    - jq, tree, net-tools, dnsutils
+    - fzf (fuzzy finder)
+    - bat (better cat)
+    - ripgrep (better grep)
+    - eza (better ls, if available)
+
+EXAMPLES:
+    # Standard installation
+    ./setup.sh
+
+    # Dry run to see what would be installed
+    ./setup.sh --dry-run
+
+    # Install without Docker
+    ./setup.sh --no-docker
+
+    # Verbose mode with logging
+    ./setup.sh --verbose --log-file /tmp/setup.log
+
+    # Remote installation
+    curl -fsSL https://example.com/setup.sh | bash
+
+REQUIREMENTS:
+    - Debian 10+ or Ubuntu 20.04+
+    - Internet connection
+    - sudo access (or run as root)
+
+For more information, see the README.md file.
+EOF
 }
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
+# ============================================================================
+# Main Installation Function
+# ============================================================================
 
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if running as root
-if [[ $EUID -eq 0 ]]; then
-   log_warning "This script is running as root. Some operations will be performed system-wide."
-   SUDO=""
-else
-   SUDO="sudo"
-fi
-
-log_info "Starting Debian/Ubuntu VM/Container Setup Script"
-log_info "=================================================="
-
-# Update system
-log_info "Updating system packages..."
-$SUDO apt-get update
-$SUDO apt-get upgrade -y
-
-# Install essential packages
-log_info "Installing essential packages..."
-$SUDO apt-get install -y \
-    curl \
-    wget \
-    git \
-    build-essential \
-    software-properties-common \
-    apt-transport-https \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    unzip \
-    vim \
-    htop \
-    tmux \
-    jq \
-    tree \
-    net-tools \
-    iputils-ping \
-    dnsutils \
-    zip
-
-log_success "Essential packages installed"
-
-# Install Zsh
-log_info "Installing Zsh..."
-$SUDO apt-get install -y zsh
-log_success "Zsh installed"
-
-# Install Oh My Zsh
-log_info "Installing Oh My Zsh..."
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    log_success "Oh My Zsh installed"
-else
-    log_warning "Oh My Zsh already installed"
-fi
-
-# Install Zsh plugins
-log_info "Installing Zsh plugins..."
-
-# zsh-autosuggestions
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions" ]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-fi
-
-# zsh-syntax-highlighting
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" ]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-fi
-
-# zsh-completions
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions" ]; then
-    git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions
-fi
-
-# Update .zshrc with plugins
-if [ -f "$HOME/.zshrc" ]; then
-    sed -i 's/plugins=(git)/plugins=(git docker docker-compose npm node python pip zsh-autosuggestions zsh-syntax-highlighting zsh-completions sudo command-not-found)/' "$HOME/.zshrc"
-    log_success "Zsh plugins configured"
-fi
-
-# Install Node.js and npm using NodeSource
-log_info "Installing Node.js and npm..."
-curl -fsSL https://deb.nodesource.com/setup_lts.x | $SUDO -E bash -
-$SUDO apt-get install -y nodejs
-log_success "Node.js $(node --version) and npm $(npm --version) installed"
-
-# npx comes with npm 5.2+, verify it's available
-if command -v npx &> /dev/null; then
-    log_success "npx $(npx --version) is available"
-else
-    log_warning "npx not found, installing..."
-    $SUDO npm install -g npx
-fi
-
-# Install Python3 and pip3
-log_info "Installing Python3 and pip3..."
-$SUDO apt-get install -y python3 python3-pip python3-venv
-log_success "Python $(python3 --version) and pip installed"
-
-# Install uv (Python package installer)
-log_info "Installing uv..."
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.cargo/bin:$PATH"
-log_success "uv installed"
-
-# Add uv to PATH in shell configs
-if ! grep -q '.cargo/bin' "$HOME/.zshrc" 2>/dev/null; then
-    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.zshrc"
-fi
-if ! grep -q '.cargo/bin' "$HOME/.bashrc" 2>/dev/null; then
-    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.bashrc"
-fi
-
-# Install Docker
-log_info "Installing Docker..."
-if ! command -v docker &> /dev/null; then
-    # Add Docker's official GPG key
-    $SUDO install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    $SUDO chmod a+r /etc/apt/keyrings/docker.gpg
-
-    # Set up the repository
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-    # Install Docker Engine
-    $SUDO apt-get update
-    $SUDO apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    # Add current user to docker group (if not root)
-    if [[ $EUID -ne 0 ]]; then
-        $SUDO usermod -aG docker $USER
-        log_warning "Added $USER to docker group. You may need to log out and back in for this to take effect."
+main() {
+    # Parse command line arguments
+    if ! parse_common_args "$@"; then
+        show_help
+        exit 0
     fi
 
-    log_success "Docker $(docker --version) installed"
-else
-    log_warning "Docker already installed: $(docker --version)"
-fi
+    # Handle component flags
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --no-zsh) INSTALL_ZSH=false; shift ;;
+            --no-node) INSTALL_NODE=false; shift ;;
+            --no-python) INSTALL_PYTHON=false; shift ;;
+            --no-docker) INSTALL_DOCKER=false; shift ;;
+            --no-extras) INSTALL_EXTRAS=false; shift ;;
+            --no-updates) UPDATE_PACKAGES=false; UPGRADE_SYSTEM=false; shift ;;
+            *) shift ;;
+        esac
+    done
 
-# Install docker-compose (standalone)
-log_info "Installing docker-compose standalone..."
-if ! command -v docker-compose &> /dev/null; then
-    DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    $SUDO curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    $SUDO chmod +x /usr/local/bin/docker-compose
-    log_success "docker-compose $(docker-compose --version) installed"
-else
-    log_warning "docker-compose already installed: $(docker-compose --version)"
-fi
+    # Initialize
+    init_common
 
-# Install additional useful tools
-log_info "Installing additional useful tools..."
+    # Show banner
+    echo ""
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_info "  Debian/Ubuntu VM/Container Setup Script v2.0.0"
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
 
-# fzf (fuzzy finder)
-if ! command -v fzf &> /dev/null; then
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install --all --no-bash --no-fish
-    log_success "fzf installed"
-fi
-
-# bat (better cat)
-if ! command -v bat &> /dev/null && ! command -v batcat &> /dev/null; then
-    $SUDO apt-get install -y bat
-    # On Ubuntu/Debian, bat is installed as batcat
-    if command -v batcat &> /dev/null && ! command -v bat &> /dev/null; then
-        mkdir -p ~/.local/bin
-        ln -s /usr/bin/batcat ~/.local/bin/bat
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+    # Update system packages
+    if [ "$UPDATE_PACKAGES" = true ]; then
+        update_package_lists || exit 1
     fi
-    log_success "bat installed"
-fi
 
-# exa (better ls) or eza (modern replacement)
-if ! command -v eza &> /dev/null; then
-    $SUDO apt-get install -y eza 2>/dev/null || log_warning "eza not available in repos, skipping"
-fi
+    if [ "$UPGRADE_SYSTEM" = true ]; then
+        upgrade_system || exit 1
+    fi
 
-# ripgrep (better grep)
-if ! command -v rg &> /dev/null; then
-    $SUDO apt-get install -y ripgrep
-    log_success "ripgrep installed"
-fi
+    # Install components
+    local install_failures=0
 
-# Set Zsh as default shell
-if [ "$SHELL" != "$(which zsh)" ]; then
-    log_info "Setting Zsh as default shell..."
-    chsh -s $(which zsh)
-    log_success "Zsh set as default shell (will take effect on next login)"
-else
-    log_success "Zsh is already the default shell"
-fi
+    if [ "$INSTALL_EXTRAS" = true ]; then
+        install_extras || ((install_failures++))
+    fi
 
-# Clean up
-log_info "Cleaning up..."
-$SUDO apt-get autoremove -y
-$SUDO apt-get clean
+    if [ "$INSTALL_ZSH" = true ]; then
+        install_zsh || ((install_failures++))
+    fi
 
+    if [ "$INSTALL_NODE" = true ]; then
+        install_node || ((install_failures++))
+    fi
+
+    if [ "$INSTALL_PYTHON" = true ]; then
+        install_python || ((install_failures++))
+    fi
+
+    if [ "$INSTALL_DOCKER" = true ]; then
+        install_docker || ((install_failures++))
+    fi
+
+    # Cleanup
+    log_step "Cleaning up"
+    execute "$SUDO apt-get autoremove -y"
+    execute "$SUDO apt-get clean"
+
+    # Run verification
+    if [ "$RUN_VERIFICATION" = true ] && [ "$install_failures" -eq 0 ]; then
+        run_verification || log_warning "Some verifications failed"
+    fi
+
+    # Show summary
+    if [ "$SHOW_SUMMARY" = true ]; then
+        show_installation_summary
+    fi
+
+    # Final messages
+    echo ""
+    if [ $install_failures -eq 0 ]; then
+        log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        log_success "  Setup Complete! 🎉"
+        log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        show_post_install_instructions
+        exit 0
+    else
+        log_error "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        log_error "  Setup completed with $install_failures error(s)"
+        log_error "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        exit 1
+    fi
+}
+
+# ============================================================================
+# Verification
+# ============================================================================
+
+run_verification() {
+    log_step "Running post-installation verification"
+
+    local verification_failures=0
+
+    [ "$INSTALL_EXTRAS" = true ] && { verify_extras || ((verification_failures++)); }
+    [ "$INSTALL_ZSH" = true ] && { verify_zsh || ((verification_failures++)); }
+    [ "$INSTALL_NODE" = true ] && { verify_node || ((verification_failures++)); }
+    [ "$INSTALL_PYTHON" = true ] && { verify_python || ((verification_failures++)); }
+    [ "$INSTALL_DOCKER" = true ] && { verify_docker || ((verification_failures++)); }
+
+    if [ $verification_failures -eq 0 ]; then
+        log_success "All verifications passed ✓"
+        return 0
+    else
+        log_warning "$verification_failures verification(s) failed"
+        return 1
+    fi
+}
+
+# ============================================================================
 # Summary
-echo ""
-log_success "=================================================="
-log_success "Setup Complete! 🎉"
-log_success "=================================================="
-echo ""
-log_info "Installed tools:"
-echo "  ✓ Zsh with Oh My Zsh + plugins"
-echo "  ✓ Node.js $(node --version)"
-echo "  ✓ npm $(npm --version)"
-echo "  ✓ npx $(npx --version)"
-echo "  ✓ Python $(python3 --version | cut -d' ' -f2)"
-echo "  ✓ pip $(pip3 --version | cut -d' ' -f2)"
-echo "  ✓ uv ($(uv --version 2>/dev/null || echo 'installed'))"
-echo "  ✓ Docker $(docker --version | cut -d' ' -f3 | tr -d ',')"
-echo "  ✓ docker-compose $(docker-compose --version | cut -d' ' -f4 | tr -d ',')"
-echo "  ✓ Additional tools: git, curl, wget, vim, htop, tmux, jq, tree, fzf, bat, ripgrep"
-echo ""
-log_warning "IMPORTANT: Please run 'source ~/.zshrc' or log out and back in to apply all changes."
-if [[ $EUID -ne 0 ]]; then
-    log_warning "You may need to log out and back in for Docker group permissions to take effect."
-fi
-echo ""
-log_info "To start using Zsh now, run: zsh"
-echo ""
+# ============================================================================
+
+show_installation_summary() {
+    echo ""
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_info "  Installation Summary"
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # Show what was installed
+    if [ "$INSTALL_ZSH" = true ] && command_exists zsh; then
+        echo "  ✓ Zsh $(zsh --version 2>&1 | cut -d' ' -f2)"
+        echo "  ✓ Oh My Zsh + plugins"
+    fi
+
+    if [ "$INSTALL_NODE" = true ] && command_exists node; then
+        echo "  ✓ Node.js $(node --version 2>&1)"
+        echo "  ✓ npm $(npm --version 2>&1)"
+        echo "  ✓ npx $(npx --version 2>&1)"
+    fi
+
+    if [ "$INSTALL_PYTHON" = true ] && command_exists python3; then
+        echo "  ✓ Python $(python3 --version 2>&1 | cut -d' ' -f2)"
+        echo "  ✓ pip $(pip3 --version 2>&1 | cut -d' ' -f2)"
+        if [ -x "$HOME/.cargo/bin/uv" ]; then
+            echo "  ✓ uv $("$HOME/.cargo/bin/uv" --version 2>&1)"
+        fi
+    fi
+
+    if [ "$INSTALL_DOCKER" = true ] && command_exists docker; then
+        echo "  ✓ Docker $(docker --version 2>&1 | cut -d' ' -f3 | tr -d ',')"
+        if command_exists docker-compose; then
+            echo "  ✓ docker-compose $(docker-compose --version 2>&1 | grep -oP '[\d\.]+' | head -n1)"
+        fi
+    fi
+
+    if [ "$INSTALL_EXTRAS" = true ]; then
+        echo "  ✓ Additional tools: git, curl, wget, vim, htop, tmux, jq, tree"
+        command_exists fzf && echo "  ✓ fzf (fuzzy finder)"
+        (command_exists bat || command_exists batcat) && echo "  ✓ bat (better cat)"
+        command_exists rg && echo "  ✓ ripgrep (better grep)"
+        command_exists eza && echo "  ✓ eza (better ls)"
+    fi
+
+    echo ""
+}
+
+show_post_install_instructions() {
+    log_warning "IMPORTANT: Post-Installation Steps"
+    echo ""
+
+    if [ "$INSTALL_ZSH" = true ]; then
+        echo "  1. Reload your shell or log out/in to apply changes:"
+        echo "     source ~/.zshrc"
+        echo "     # or"
+        echo "     zsh"
+        echo ""
+    fi
+
+    if [ "$INSTALL_DOCKER" = true ] && [ "$IS_ROOT" = false ]; then
+        echo "  2. Docker group permissions require a re-login to take effect:"
+        echo "     # Log out and back in, or run:"
+        echo "     newgrp docker"
+        echo ""
+    fi
+
+    if [ "$INSTALL_PYTHON" = true ] && [ "${INSTALL_UV:-true}" = true ]; then
+        echo "  3. uv is installed in ~/.cargo/bin"
+        echo "     Restart your shell or run: source ~/.zshrc"
+        echo ""
+    fi
+
+    if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
+        echo "  📋 Full installation log: $LOG_FILE"
+        echo ""
+    fi
+}
+
+# ============================================================================
+# Run Main Function
+# ============================================================================
+
+main "$@"

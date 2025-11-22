@@ -43,11 +43,38 @@ server-steups/
 
 ## Current Contents
 
-The repository currently contains legacy VM/container setup scripts:
-- **setup.sh** (8 KB): Full-featured Debian/Ubuntu setup with Zsh, Node.js, Python, Docker, and CLI tools
-- **setup-minimal.sh** (1.7 KB): Lightweight version for CI/CD
-- **verify.sh** (2.8 KB): Post-installation verification
-- **Documentation files**: Multiple markdown and text files documenting the VM setup workflow
+### Base Setup Scripts (v2.0.0)
+
+The repository contains production-ready, modular setup scripts:
+
+**Main Scripts:**
+- **base/setup.sh**: Full-featured setup with modular architecture
+- **base/setup-minimal.sh**: Lightweight version for CI/CD
+- **base/verify.sh**: Post-installation verification
+
+**Shared Libraries (NEW):**
+- **base/lib/common.sh**: Common functions (logging, OS detection, package management)
+- **base/lib/install-zsh.sh**: Zsh and Oh My Zsh installation module
+- **base/lib/install-node.sh**: Node.js installation module
+- **base/lib/install-python.sh**: Python and uv installation module
+- **base/lib/install-docker.sh**: Docker and Docker Compose installation module
+- **base/lib/install-extras.sh**: Additional CLI utilities module
+
+**Configuration:**
+- **base/config/default.conf**: Configuration template with all available options
+
+**Key Features (v2.0):**
+- ✅ Modular architecture for reusability
+- ✅ Dry-run mode to preview changes
+- ✅ Configuration file support
+- ✅ Post-installation verification
+- ✅ Comprehensive logging with file output
+- ✅ Component selection via flags
+- ✅ OS version detection and validation
+- ✅ Improved error handling and recovery
+
+**Documentation:**
+- Multiple markdown and text files documenting the VM setup workflow in `docs/`
 
 ## Planned Additions
 
@@ -140,6 +167,12 @@ This repository uses feature branches for development:
 - Follow Docker best practices
 - Include comments for complex operations
 - Add error handling
+- Use `set -e` or `set -euo pipefail` for error handling
+- Implement idempotency (scripts safe to run multiple times)
+- Use functions for reusability
+- Provide dry-run modes where applicable
+- Add verification steps after installation
+- Use meaningful variable names and constants
 
 ## Common Tasks
 
@@ -176,14 +209,196 @@ curl -fsSL https://raw.githubusercontent.com/USER/server-steups/main/base/setup.
 - Enable firewall rules
 - Use HTTPS/TLS for all services
 
+## Shell Script Best Practices
+
+When writing setup or utility scripts for this repository, follow these best practices:
+
+### Error Handling
+```bash
+# Always use strict error handling
+set -e          # Exit on error
+set -u          # Exit on undefined variable
+set -o pipefail # Exit on pipe failure
+
+# Or combined:
+set -euo pipefail
+
+# Add cleanup on exit
+trap cleanup_function EXIT
+```
+
+### Idempotency
+```bash
+# Check if already installed before installing
+if command -v docker >/dev/null 2>&1; then
+    echo "Docker already installed"
+    return 0
+fi
+
+# Check if configuration already applied
+if grep -q "desired_config" /path/to/file; then
+    echo "Already configured"
+    return 0
+fi
+```
+
+### Modular Design
+```bash
+# Use functions for reusability
+install_component() {
+    local component="$1"
+    echo "Installing $component..."
+    # Installation logic
+}
+
+verify_component() {
+    local component="$1"
+    if command -v "$component" >/dev/null 2>&1; then
+        echo "✓ $component installed"
+        return 0
+    else
+        echo "✗ $component not found"
+        return 1
+    fi
+}
+```
+
+### Configuration Support
+```bash
+# Support configuration from multiple sources
+CONFIG_FILE="${CONFIG_FILE:-$HOME/.app-config}"
+
+# 1. Load default configuration
+source "$SCRIPT_DIR/config/default.conf"
+
+# 2. Load system-wide config
+[ -f /etc/app-config ] && source /etc/app-config
+
+# 3. Load user config
+[ -f "$HOME/.app-config" ] && source "$HOME/.app-config"
+
+# 4. Environment variables override all
+INSTALL_DOCKER="${INSTALL_DOCKER:-true}"
+```
+
+### Dry-Run Support
+```bash
+DRY_RUN="${DRY_RUN:-false}"
+
+execute() {
+    local cmd="$*"
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY-RUN] Would execute: $cmd"
+        return 0
+    fi
+    eval "$cmd"
+}
+
+# Usage
+execute "apt-get install -y package"
+```
+
+### Logging
+```bash
+# Color-coded logging
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m'
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE" >&2
+}
+```
+
+### OS Detection and Validation
+```bash
+detect_os() {
+    if [ ! -f /etc/os-release ]; then
+        echo "Cannot detect OS"
+        return 1
+    fi
+
+    . /etc/os-release
+
+    if [[ ! "$ID" =~ ^(ubuntu|debian)$ ]]; then
+        echo "Unsupported OS: $ID"
+        return 1
+    fi
+
+    echo "Detected: $NAME $VERSION_ID"
+    return 0
+}
+```
+
+### Download with Retries
+```bash
+download_file() {
+    local url="$1"
+    local output="$2"
+    local max_retries="${3:-3}"
+
+    for ((i=1; i<=max_retries; i++)); do
+        if curl -fsSL "$url" -o "$output"; then
+            return 0
+        fi
+        echo "Download failed, retry $i/$max_retries..."
+        sleep 2
+    done
+
+    echo "Failed to download after $max_retries attempts"
+    return 1
+}
+```
+
+### Script Template
+```bash
+#!/bin/bash
+# Script Description
+# Version: 1.0.0
+
+set -euo pipefail
+
+# Determine script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Configuration
+VERBOSE="${VERBOSE:-false}"
+DRY_RUN="${DRY_RUN:-false}"
+
+# Source common library if available
+if [ -f "$SCRIPT_DIR/lib/common.sh" ]; then
+    source "$SCRIPT_DIR/lib/common.sh"
+fi
+
+# Main function
+main() {
+    echo "Starting..."
+
+    # Your logic here
+
+    echo "Complete!"
+}
+
+# Run main function
+main "$@"
+```
+
 ## Contributing
 
 When making changes:
 1. Create a feature branch
 2. Test thoroughly on a clean system
-3. Update documentation
-4. Commit with clear messages
-5. Push to feature branch
+3. Follow the shell script best practices above
+4. Update documentation
+5. Run shellcheck on bash scripts
+6. Test dry-run mode
+7. Commit with clear messages
+8. Push to feature branch
 
 ## Resources
 
