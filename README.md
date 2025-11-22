@@ -21,7 +21,8 @@ server-steups/
 ├── docker-compose/           # Docker Compose configurations
 │   ├── ntfy/                 # Push notification service
 │   ├── n8n/                  # Workflow automation
-│   └── gitea/                # Self-hosted Git
+│   ├── gitea/                # Self-hosted Git
+│   └── prometheus-grafana/   # Monitoring stack
 ├── apps/                     # Native installation scripts
 │   └── ...                   # Application-specific scripts
 ├── scripts/                  # Utility scripts
@@ -80,6 +81,10 @@ nano .env  # Configure your settings
 docker-compose up -d
 ```
 
+## Available Self-Hosted Applications
+
+- **Prometheus + Grafana** ✅ - Complete monitoring stack with metrics collection and visualization
+
 ## Planned Self-Hosted Applications
 
 - **ntfy** - Push notifications to your phone or desktop
@@ -105,6 +110,13 @@ docker-compose up -d
 ```bash
 curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup.sh | bash
 source ~/.zshrc
+```
+
+### Deploy Monitoring Stack
+```bash
+cd apps/prometheus-grafana
+./setup.sh
+# Access Grafana at http://localhost:3000
 ```
 
 ### Deploy Multiple Services
@@ -184,7 +196,7 @@ MIT License - Use freely for personal or commercial projects.
 - [ ] Add Gitea configuration
 - [ ] Create backup automation script
 - [ ] Add Traefik reverse proxy
-- [ ] Add monitoring stack (Prometheus + Grafana)
+- [x] Add monitoring stack (Prometheus + Grafana)
 - [ ] Create update automation
 - [ ] Add security hardening scripts
 - [ ] Document SSL/TLS setup
