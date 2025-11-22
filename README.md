@@ -1,181 +1,182 @@
-# VM/Container Quick Setup Script
+# Server Setup Scripts
 
-A comprehensive setup script for quickly configuring new Debian/Ubuntu virtual machines and containers with essential development tools.
+A comprehensive collection of server setup scripts, Docker Compose configurations, and installation guides for self-hosted applications.
 
-## 🚀 Quick Start
+## Purpose
 
-### One-line installation (once hosted):
+This repository provides ready-to-use scripts and configurations for:
+- Setting up new Debian/Ubuntu servers
+- Deploying self-hosted applications with Docker Compose
+- Managing containerized services
+- Automating server maintenance tasks
 
-```bash
-# Using curl
-curl -fsSL https://your-domain.com/setup.sh | bash
+## Repository Structure
 
-# Using wget
-wget -qO- https://your-domain.com/setup.sh | bash
+```
+server-steups/
+├── base/                      # Base system setup scripts
+│   ├── setup.sh              # Full development environment
+│   ├── setup-minimal.sh      # Minimal server setup
+│   └── verify.sh             # Installation verification
+├── docker-compose/           # Docker Compose configurations
+│   ├── ntfy/                 # Push notification service
+│   ├── n8n/                  # Workflow automation
+│   └── gitea/                # Self-hosted Git
+├── apps/                     # Native installation scripts
+│   └── ...                   # Application-specific scripts
+├── scripts/                  # Utility scripts
+│   ├── backup.sh            # Backup automation
+│   ├── update.sh            # Update management
+│   └── ...                   # Other utilities
+├── docs/                     # Legacy documentation
+└── CLAUDE.md                # Development guide
 ```
 
-### Local usage:
+## Quick Start
+
+### 1. Setup a New Server
+
+Run the base setup script on a fresh Debian/Ubuntu installation:
 
 ```bash
-chmod +x setup.sh
-./setup.sh
+# Full setup (development environment)
+curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup.sh | bash
+
+# Or minimal setup (production servers)
+curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup-minimal.sh | bash
 ```
 
-## 📦 What Gets Installed
+**What gets installed:**
+- Zsh with Oh My Zsh
+- Node.js LTS + npm
+- Python 3 + pip + uv
+- Docker + Docker Compose
+- Essential CLI tools (git, curl, vim, htop, tmux, fzf, bat, ripgrep)
 
-### Core Tools
-- ✅ **Zsh** with Oh My Zsh
-- ✅ **Oh My Zsh plugins**: git, docker, docker-compose, npm, node, python, pip, zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions, sudo, command-not-found
-- ✅ **Node.js** (LTS version) + npm + npx
-- ✅ **Python3** + pip3 + venv
-- ✅ **uv** (Fast Python package installer) + uvx
-- ✅ **Docker** + Docker Compose (both plugin and standalone)
+### 2. Deploy Self-Hosted Applications
 
-### Additional Utilities
-- git, curl, wget, vim
-- htop, tmux, tree, jq
-- fzf (fuzzy finder)
-- bat (better cat)
-- ripgrep (better grep)
-- eza (better ls, if available)
-- net-tools, dnsutils, zip/unzip
-
-## 🌐 Hosting Options
-
-### Option 1: GitHub Gist (Easiest)
-1. Create a new gist at https://gist.github.com
-2. Upload `setup.sh`
-3. Click "Raw" and use that URL
-
-**Usage:**
 ```bash
-curl -fsSL https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/setup.sh | bash
+# Clone the repository
+git clone https://github.com/USER/server-steups.git
+cd server-steups
+
+# Deploy a service (example: ntfy)
+cd docker-compose/ntfy
+cp .env.example .env
+nano .env  # Configure your settings
+docker-compose up -d
 ```
 
-### Option 2: GitHub Repository
-1. Create a public repository
-2. Push `setup.sh` to the repo
-3. Use the raw.githubusercontent.com URL
+## Planned Self-Hosted Applications
 
-**Usage:**
+- **ntfy** - Push notifications to your phone or desktop
+- **n8n** - Workflow automation (alternative to Zapier)
+- **Gitea** - Lightweight self-hosted Git service
+- **Uptime Kuma** - Status monitoring tool
+- **Vaultwarden** - Password manager (Bitwarden-compatible)
+- **Nextcloud** - File sync and sharing
+- **Jellyfin** - Media streaming server
+- **Traefik/Caddy** - Reverse proxy with automatic HTTPS
+
+## Directory Guides
+
+- **[base/](base/README.md)** - Base system setup scripts and verification
+- **[docker-compose/](docker-compose/README.md)** - Docker Compose configurations for services
+- **[apps/](apps/README.md)** - Native installation scripts
+- **[scripts/](scripts/README.md)** - Backup, update, and maintenance utilities
+- **[docs/](docs/)** - Legacy documentation
+
+## Usage Examples
+
+### Setup New Development VM
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USERNAME/REPO/main/setup.sh | bash
-```
-
-### Option 3: Custom Domain (Professional)
-
-Host on your own domain using:
-- **GitHub Pages**: Free, easy, use the repo method above with custom domain
-- **Cloudflare Pages**: Free, fast CDN
-- **Netlify**: Free tier available
-- **Your own server**: nginx/Apache with HTTPS
-
-**Example nginx config:**
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    
-    location /setup.sh {
-        alias /var/www/scripts/setup.sh;
-        add_header Content-Type text/plain;
-        add_header Cache-Control "no-cache";
-    }
-}
-```
-
-### Option 4: Pastebin-style Services
-- **paste.sh**: `curl -F'file=@setup.sh' https://paste.sh`
-- **ix.io**: `cat setup.sh | curl -F 'f:1=<-' ix.io`
-
-⚠️ **Security Note**: These services are less permanent and secure than GitHub
-
-## 🔒 Security Best Practices
-
-### For Script Authors:
-1. Always use HTTPS URLs
-2. Sign your scripts (GPG)
-3. Provide checksums (SHA256)
-4. Keep scripts in version control
-
-### For Users:
-1. **Never run scripts blindly!** Always review first:
-   ```bash
-   curl -fsSL https://your-domain.com/setup.sh | less
-   ```
-2. Download and inspect before running:
-   ```bash
-   curl -fsSL https://your-domain.com/setup.sh -o setup.sh
-   less setup.sh
-   chmod +x setup.sh
-   ./setup.sh
-   ```
-3. Verify checksums if provided
-
-## 🛠️ Customization
-
-Edit the script to:
-- Add/remove packages in the `apt-get install` sections
-- Modify Zsh plugins in the `sed` command
-- Change Node.js version (modify the NodeSource URL)
-- Add your own dotfiles or configurations
-
-## 📝 Post-Installation
-
-After running the script:
-
-1. **Reload your shell** or log out/in:
-   ```bash
-   source ~/.zshrc
-   # or
-   zsh
-   ```
-
-2. **Verify Docker permissions** (non-root users):
-   ```bash
-   # May need to log out/in first
-   docker run hello-world
-   ```
-
-3. **Test installations**:
-   ```bash
-   node --version
-   npm --version
-   python3 --version
-   uv --version
-   docker --version
-   docker-compose --version
-   ```
-
-## 🐛 Troubleshooting
-
-**Zsh not default shell?**
-```bash
-chsh -s $(which zsh)
-```
-
-**Docker permission denied?**
-```bash
-sudo usermod -aG docker $USER
-# Then log out and back in
-```
-
-**uv not in PATH?**
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
+curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/base/setup.sh | bash
 source ~/.zshrc
 ```
 
-## 📋 Requirements
+### Deploy Multiple Services
+```bash
+# Start all services in a directory
+cd docker-compose
+for dir in */; do
+    (cd "$dir" && [ -f docker-compose.yml ] && docker-compose up -d)
+done
+```
+
+### Backup All Services
+```bash
+./scripts/backup.sh --all
+```
+
+### Update Everything
+```bash
+./scripts/update.sh
+```
+
+## Requirements
 
 - Debian 10+ or Ubuntu 20.04+
 - Internet connection
-- sudo access (or root)
+- sudo/root access
+- Docker (for containerized apps)
 
-## 🤝 Contributing
+## Security Best Practices
 
-Feel free to fork and customize for your needs!
+1. **Never commit secrets** - Use `.env.example` templates only
+2. **Review scripts before running** - Especially when piped from curl
+3. **Use strong passwords** - For all services
+4. **Enable HTTPS** - Use Caddy or Traefik for automatic SSL
+5. **Keep systems updated** - Run updates regularly
+6. **Firewall configuration** - Only expose necessary ports
+7. **Backup regularly** - Automate backups of critical data
 
-## 📄 License
+## Contributing
 
-MIT License - use freely!
+This is a personal repository but feel free to:
+- Fork and customize for your needs
+- Submit improvements via pull requests
+- Report issues or suggestions
+- Share your configurations
+
+### Adding a New Service
+
+1. Create directory in `docker-compose/SERVICE_NAME/`
+2. Add:
+   - `docker-compose.yml`
+   - `.env.example`
+   - `README.md`
+   - Configuration files
+3. Test thoroughly
+4. Update main README
+
+## Development
+
+See [CLAUDE.md](CLAUDE.md) for detailed development guidelines and repository conventions.
+
+## Resources
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Awesome Self-Hosted](https://github.com/awesome-selfhosted/awesome-selfhosted)
+- [LinuxServer.io](https://www.linuxserver.io/) - Quality Docker images
+
+## License
+
+MIT License - Use freely for personal or commercial projects.
+
+## Roadmap
+
+- [ ] Add ntfy setup
+- [ ] Add n8n with PostgreSQL
+- [ ] Add Gitea configuration
+- [ ] Create backup automation script
+- [ ] Add Traefik reverse proxy
+- [ ] Add monitoring stack (Prometheus + Grafana)
+- [ ] Create update automation
+- [ ] Add security hardening scripts
+- [ ] Document SSL/TLS setup
+- [ ] Create migration guides
+
+---
+
+**Note:** This repository is actively being developed and restructured. Check back for new services and improvements!
