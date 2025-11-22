@@ -11,14 +11,80 @@ Reusable scripts that work across different services and applications:
 - Security tools
 - Maintenance scripts
 
-## Planned Scripts
+## Available Scripts
 
 ### backup.sh
-Automated backup script for all services:
-- Docker volumes
-- Configuration files
-- Database dumps
-- Compressed archives with timestamps
+Universal backup script with multi-tool support:
+- **Supported Tools**: restic, rclone, borg
+- **Destinations**: Local filesystem, SSH/SFTP, S3, rclone remotes (Dropbox, Google Drive, etc.)
+- **Features**:
+  - Encrypted and deduplicated backups (restic, borg)
+  - Cloud sync capabilities (rclone)
+  - Flexible retention policies
+  - Backup verification and integrity checks
+  - Restore functionality
+  - Pre/post backup hooks
+  - Dry-run mode
+  - Comprehensive logging
+
+**Quick Start:**
+```bash
+# Local backup with restic
+./scripts/backup.sh --tool restic --source /home --destination /mnt/backup
+
+# Backup to remote server via SSH
+./scripts/backup.sh --tool restic --source /var/www \
+  --destination-type ssh --destination user@server.com:/backups
+
+# Backup to S3
+./scripts/backup.sh --tool restic --source /data \
+  --destination-type s3 --destination s3:s3.amazonaws.com/my-bucket
+
+# Backup to Dropbox using rclone
+./scripts/backup.sh --tool rclone --source /home/user/documents \
+  --destination-type rclone --destination dropbox:backups
+
+# Use configuration file
+./scripts/backup.sh --config /etc/backup.conf
+
+# List available backups
+./scripts/backup.sh --list --config /etc/backup.conf
+
+# Restore from backup
+./scripts/backup.sh --restore /tmp/restore --snapshot latest --config /etc/backup.conf
+
+# Check backup integrity
+./scripts/backup.sh --check --config /etc/backup.conf
+
+# Prune old backups
+./scripts/backup.sh --prune --config /etc/backup.conf
+```
+
+**Configuration:**
+Copy `backup.conf.example` to create your configuration:
+```bash
+cp scripts/backup.conf.example /etc/backup.conf
+# Edit with your settings
+nano /etc/backup.conf
+```
+
+**Scheduled Backups:**
+Add to crontab for automated backups:
+```bash
+# Daily backup at 2 AM
+0 2 * * * /path/to/scripts/backup.sh --config /etc/backup.conf
+
+# Weekly cleanup at 3 AM on Sundays
+0 3 * * 0 /path/to/scripts/backup.sh --prune --config /etc/backup.conf
+```
+
+**Security Notes:**
+- Use environment variables for passwords: `RESTIC_PASSWORD`, `BORG_PASSPHRASE`
+- Store AWS credentials in `~/.aws/credentials` or use IAM roles
+- Configure rclone remotes with `rclone config`
+- Use password files instead of plain text: `RESTIC_PASSWORD_FILE`
+
+## Planned Scripts
 
 ### restore.sh
 Restore from backups:

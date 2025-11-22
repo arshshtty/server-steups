@@ -1,0 +1,181 @@
+# Universal Backup Script Configuration Template
+# Copy this file to /etc/backup.conf or ~/.backup.conf and customize
+
+# ============================================
+# Basic Configuration
+# ============================================
+
+# Backup tool to use: restic, rclone, or borg
+BACKUP_TOOL="restic"
+
+# Backup name (used for tagging/naming archives)
+BACKUP_NAME="$(hostname)-backup"
+
+# Paths to backup (space-separated)
+BACKUP_SOURCES="/home /etc /var/www"
+
+# Destination type: local, ssh, s3, rclone
+BACKUP_DESTINATION_TYPE="local"
+
+# Backup destination path
+BACKUP_DESTINATION="/mnt/backup"
+
+# ============================================
+# Retention Policy
+# ============================================
+
+# Number of daily backups to keep
+RETENTION_DAYS=7
+
+# Number of weekly backups to keep
+RETENTION_WEEKS=4
+
+# Number of monthly backups to keep
+RETENTION_MONTHS=12
+
+# Number of yearly backups to keep
+RETENTION_YEARS=3
+
+# ============================================
+# Restic Configuration
+# ============================================
+
+# Restic repository path (overrides BACKUP_DESTINATION)
+# RESTIC_REPOSITORY="/mnt/backup/restic-repo"
+
+# Restic password (use environment variable or password file for security)
+# RESTIC_PASSWORD="your-secure-password"
+# RESTIC_PASSWORD_FILE="/root/.restic-password"
+
+# ============================================
+# Borg Configuration
+# ============================================
+
+# Borg repository path (overrides BACKUP_DESTINATION)
+# BORG_REPOSITORY="/mnt/backup/borg-repo"
+
+# Borg passphrase (use environment variable for security)
+# BORG_PASSPHRASE="your-secure-passphrase"
+
+# ============================================
+# Rclone Configuration
+# ============================================
+
+# Rclone remote name (must be configured in rclone)
+# RCLONE_REMOTE="dropbox"
+
+# Path within the remote
+# RCLONE_PATH="backups"
+
+# ============================================
+# SSH Destination Configuration
+# ============================================
+
+# SSH host
+# SSH_HOST="backup.example.com"
+
+# SSH user
+# SSH_USER="backup"
+
+# SSH port
+# SSH_PORT=22
+
+# Path on remote server
+# SSH_PATH="/var/backups"
+
+# Combined SSH destination (alternative to separate fields)
+# For restic: sftp:user@host:/path
+# For borg: ssh://user@host:port/path
+# Example:
+# BACKUP_DESTINATION="user@backup.example.com:/backups"
+
+# ============================================
+# S3 Configuration
+# ============================================
+
+# S3 bucket and path
+# S3_BUCKET="my-backup-bucket"
+# S3_REGION="us-east-1"
+
+# AWS credentials (use environment variables or IAM roles)
+# AWS_ACCESS_KEY_ID="your-access-key"
+# AWS_SECRET_ACCESS_KEY="your-secret-key"
+
+# S3-compatible services (Wasabi, Backblaze B2, MinIO, etc.)
+# For restic with S3:
+# RESTIC_REPOSITORY="s3:s3.amazonaws.com/bucket-name"
+# RESTIC_REPOSITORY="s3:https://s3.wasabisys.com/bucket-name"
+
+# ============================================
+# Advanced Options
+# ============================================
+
+# Pre-backup script (runs before backup starts)
+# PRE_BACKUP_SCRIPT="/usr/local/bin/pre-backup.sh"
+
+# Post-backup script (runs after backup completes)
+# POST_BACKUP_SCRIPT="/usr/local/bin/post-backup.sh"
+
+# Logging
+# LOG_FILE="/var/log/backup.log"
+
+# Verbose output
+# VERBOSE=true
+
+# Dry run mode (show what would be done without doing it)
+# DRY_RUN=false
+
+# ============================================
+# Example Configurations
+# ============================================
+
+# Example 1: Local backup with restic
+# BACKUP_TOOL="restic"
+# BACKUP_SOURCES="/home /etc"
+# BACKUP_DESTINATION_TYPE="local"
+# BACKUP_DESTINATION="/mnt/backup/restic-repo"
+# RESTIC_PASSWORD="your-secure-password"
+
+# Example 2: SSH backup with restic
+# BACKUP_TOOL="restic"
+# BACKUP_SOURCES="/var/www"
+# BACKUP_DESTINATION_TYPE="ssh"
+# BACKUP_DESTINATION="backup@server.com:/backups/restic"
+# RESTIC_PASSWORD="your-secure-password"
+
+# Example 3: S3 backup with restic
+# BACKUP_TOOL="restic"
+# BACKUP_SOURCES="/data"
+# BACKUP_DESTINATION_TYPE="s3"
+# BACKUP_DESTINATION="s3:s3.amazonaws.com/my-backup-bucket"
+# RESTIC_PASSWORD="your-secure-password"
+# AWS_ACCESS_KEY_ID="your-access-key"
+# AWS_SECRET_ACCESS_KEY="your-secret-key"
+
+# Example 4: Dropbox backup with rclone
+# BACKUP_TOOL="rclone"
+# BACKUP_SOURCES="/home/user/documents"
+# BACKUP_DESTINATION_TYPE="rclone"
+# RCLONE_REMOTE="dropbox"
+# RCLONE_PATH="backups"
+
+# Example 5: Google Drive backup with rclone
+# BACKUP_TOOL="rclone"
+# BACKUP_SOURCES="/home/user/photos"
+# BACKUP_DESTINATION_TYPE="rclone"
+# RCLONE_REMOTE="gdrive"
+# RCLONE_PATH="backups"
+
+# Example 6: Local backup with borg
+# BACKUP_TOOL="borg"
+# BACKUP_SOURCES="/home /etc"
+# BACKUP_DESTINATION_TYPE="local"
+# BACKUP_DESTINATION="/mnt/backup/borg-repo"
+# BORG_PASSPHRASE="your-secure-passphrase"
+
+# Example 7: SSH backup with borg
+# BACKUP_TOOL="borg"
+# BACKUP_SOURCES="/var/www"
+# BACKUP_DESTINATION_TYPE="ssh"
+# BACKUP_DESTINATION="backup@server.com:/backups/borg"
+# BORG_PASSPHRASE="your-secure-passphrase"
