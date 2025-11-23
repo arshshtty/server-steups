@@ -1,0 +1,17 @@
+# Basic Reverse Proxy Example
+# This is the simplest use case - proxying a domain to a local service
+
+# Global configuration
+{
+    email admin@example.com  # Replace with your email for Let's Encrypt
+}
+
+# Proxy example.com to a service running on localhost:8080
+example.com {
+    reverse_proxy localhost:8080
+}
+
+# Alternative: Proxy with www subdomain
+www.example.com {
+    redir https://example.com{uri}  # Redirect www to non-www
+}

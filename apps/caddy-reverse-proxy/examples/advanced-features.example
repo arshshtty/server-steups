@@ -1,0 +1,117 @@
+# Advanced Features Example
+# Load balancing, custom headers, logging, and more
+
+{
+    email admin@example.com
+
+    # Custom log format
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 5
+        }
+        format json
+    }
+}
+
+# Load balancing between multiple backends
+loadbalanced.example.com {
+    reverse_proxy localhost:8001 localhost:8002 localhost:8003 {
+        lb_policy round_robin
+        health_uri /health
+        health_interval 10s
+    }
+}
+
+# Custom error pages
+errors.example.com {
+    reverse_proxy localhost:8080
+
+    handle_errors {
+        rewrite * /{err.status_code}.html
+        file_server {
+            root /var/www/error-pages
+        }
+    }
+}
+
+# Rate limiting (requires rate-limit plugin)
+# Install: caddy add-package github.com/mholt/caddy-ratelimit
+ratelimited.example.com {
+    reverse_proxy localhost:8080
+
+    # Limit to 100 requests per minute per IP
+    rate_limit {
+        zone ratelimit {
+            key {remote_host}
+            window 1m
+            events 100
+        }
+    }
+}
+
+# Gzip compression
+compressed.example.com {
+    encode gzip
+    reverse_proxy localhost:8080
+}
+
+# Custom headers and security
+secure.example.com {
+    reverse_proxy localhost:8080
+
+    header {
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Remove server information
+        -Server
+    }
+}
+
+# Path-based routing
+pathrouting.example.com {
+    # Route /api to one service
+    handle /api/* {
+        reverse_proxy localhost:5000
+    }
+
+    # Route /admin to another service
+    handle /admin/* {
+        reverse_proxy localhost:6000
+    }
+
+    # Everything else goes to the main app
+    handle {
+        reverse_proxy localhost:3000
+    }
+}
+
+# Basic authentication
+protected.example.com {
+    reverse_proxy localhost:8080
+
+    basicauth {
+        # username: admin, password: changeme
+        # Generate with: caddy hash-password
+        admin $2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG
+    }
+}
+
+# Redirect HTTP to HTTPS
+http://insecure.example.com {
+    redir https://{host}{uri} permanent
+}
+
+# Custom TLS configuration
+customtls.example.com {
+    tls {
+        protocols tls1.2 tls1.3
+        ciphers TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    }
+    reverse_proxy localhost:8080
+}

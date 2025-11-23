@@ -1,0 +1,31 @@
+# Docker Services Reverse Proxy Example
+# Proxying to Docker containers by name or IP
+
+{
+    email admin@example.com
+}
+
+# Proxy to Docker container by service name (requires same Docker network)
+app.example.com {
+    reverse_proxy my-app-container:3000
+}
+
+# Proxy to Docker container by IP
+api.example.com {
+    reverse_proxy 172.17.0.2:8080
+}
+
+# Proxy to Docker Compose service
+# Make sure Caddy container is on the same network as your services
+web.example.com {
+    reverse_proxy webapp:80
+}
+
+# Example with health check
+service.example.com {
+    reverse_proxy my-service:8080 {
+        health_uri /health
+        health_interval 10s
+        health_timeout 5s
+    }
+}
