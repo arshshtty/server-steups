@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAT Manager - Proxmox Port Forwarding</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-router"></i> NAT Manager
+            </span>
+            <div class="d-flex">
+                <button class="btn btn-outline-light btn-sm me-2" onclick="loadStats()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <button class="btn btn-outline-warning btn-sm me-2" onclick="showBackupModal()">
+                    <i class="bi bi-download"></i> Backup
+                </button>
+                <button class="btn btn-outline-info btn-sm" onclick="showExportModal()">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Export
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Mappings</h5>
+                        <h2 id="stat-total-mappings">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Containers</h5>
+                        <h2 id="stat-containers">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">TCP / UDP</h5>
+                        <h2><span id="stat-tcp">0</span> / <span id="stat-udp">0</span></h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Reserved Ports</h5>
+                        <h2 id="stat-reserved">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-3">
+            <div class="col">
+                <button class="btn btn-primary" onclick="showAddModal()">
+                    <i class="bi bi-plus-circle"></i> Add Port Mapping
+                </button>
+                <button class="btn btn-warning" onclick="showReserveModal()">
+                    <i class="bi bi-lock"></i> Reserve Ports
+                </button>
+                <button class="btn btn-secondary" onclick="showRebuildModal()">
+                    <i class="bi bi-database"></i> Rebuild Database
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="mappings-tab" data-bs-toggle="tab"
+                        data-bs-target="#mappings" type="button" role="tab">
+                    Port Mappings
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reserved-tab" data-bs-toggle="tab"
+                        data-bs-target="#reserved" type="button" role="tab">
+                    Reserved Ports
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3" id="mainTabContent">
+            <!-- Port Mappings Tab -->
+            <div class="tab-pane fade show active" id="mappings" role="tabpanel">
+                <div id="mappings-container"></div>
+            </div>
+
+            <!-- Reserved Ports Tab -->
+            <div class="tab-pane fade" id="reserved" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Port</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reserved-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Mapping Modal -->
+    <div class="modal fade" id="addModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Port Mapping</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                        <div class="mb-3">
+                            <label class="form-label">Container IP Address</label>
+                            <input type="text" class="form-control" id="add-ip" placeholder="192.168.1.100" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mode</label>
+                            <select class="form-select" id="add-mode" onchange="toggleManualFields()">
+                                <option value="automatic">Automatic (SSH, HTTP, HTTPS, 8080 + extras)</option>
+                                <option value="manual">Manual (specify ports)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="num-ports-group">
+                            <label class="form-label">Number of Ports</label>
+                            <input type="number" class="form-control" id="add-num-ports" value="6" min="1" max="20">
+                            <small class="text-muted">First 4 are: 22(SSH), 80(HTTP), 443(HTTPS), 8080. Rest are sequential.</small>
+                        </div>
+
+                        <div id="manual-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Internal Ports (comma-separated)</label>
+                                <input type="text" class="form-control" id="add-internal-ports"
+                                       placeholder="22,80,443,8080">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Protocols (comma-separated, tcp or udp)</label>
+                                <input type="text" class="form-control" id="add-protocols"
+                                       placeholder="tcp,tcp,tcp,tcp">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description (optional)</label>
+                            <input type="text" class="form-control" id="add-description"
+                                   placeholder="Production web server">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addMapping()">Add Mapping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserve Ports Modal -->
+    <div class="modal fade" id="reserveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reserve Ports</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reserveForm">
+                        <div class="mb-3">
+                            <label class="form-label">Ports (comma-separated)</label>
+                            <input type="text" class="form-control" id="reserve-ports"
+                                   placeholder="22,80,443" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="reserve-description"
+                                   placeholder="Reserved for host services">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="reservePorts()">Reserve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Modal -->
+    <div class="modal fade" id="backupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Backup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This will create a backup of your current NAT configuration including:</p>
+                    <ul>
+                        <li>Port mappings database</li>
+                        <li>Current iptables rules</li>
+                    </ul>
+                    <p>The backup will be saved with a timestamp.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="createBackup()">Create Backup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Copy the JSON below to save your configuration:</p>
+                    <textarea class="form-control" id="export-data" rows="15" readonly></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="copyExportData()">
+                        <i class="bi bi-clipboard"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rebuild Database Modal -->
+    <div class="modal fade" id="rebuildModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rebuild Database</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This will scan your current iptables rules and rebuild the database.</p>
+                    <p class="text-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Use this if you've manually added iptables rules or if the database is out of sync.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="rebuildDatabase()">Rebuild</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        <div id="alert-container"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

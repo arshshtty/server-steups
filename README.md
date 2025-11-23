@@ -24,6 +24,7 @@ server-steups/
 │   ├── gitea/                # Self-hosted Git
 │   └── prometheus-grafana/   # Monitoring stack
 ├── apps/                     # Native installation scripts
+│   ├── proxmox-nat/          # NAT port forwarding manager
 │   └── ...                   # Application-specific scripts
 ├── scripts/                  # Utility scripts
 │   ├── backup.sh            # Backup automation
@@ -81,9 +82,10 @@ nano .env  # Configure your settings
 docker-compose up -d
 ```
 
-## Available Self-Hosted Applications
+## Available Applications
 
 - **Prometheus + Grafana** ✅ - Complete monitoring stack with metrics collection and visualization
+- **NAT Manager** ✅ - NAT port forwarding management for Proxmox with web UI (see [apps/proxmox-nat/](apps/proxmox-nat/))
 
 ## Planned Self-Hosted Applications
 
@@ -117,6 +119,13 @@ source ~/.zshrc
 cd apps/prometheus-grafana
 ./setup.sh
 # Access Grafana at http://localhost:3000
+```
+
+### Setup NAT Manager for Proxmox
+```bash
+cd apps/proxmox-nat
+sudo bash setup.sh
+# Access web UI at http://your-server:8888
 ```
 
 ### Deploy Multiple Services
@@ -197,6 +206,7 @@ MIT License - Use freely for personal or commercial projects.
 - [ ] Create backup automation script
 - [ ] Add Traefik reverse proxy
 - [x] Add monitoring stack (Prometheus + Grafana)
+- [x] Add NAT Manager for Proxmox
 - [ ] Create update automation
 - [ ] Add security hardening scripts
 - [ ] Document SSL/TLS setup

@@ -27,9 +27,11 @@ server-steups/
 │   ├── gitea/                # Gitea git service
 │   └── README.md            # Docker compose usage guide
 ├── apps/                     # Self-hosted app installation scripts
-│   ├── ntfy/                 # ntfy setup scripts
-│   ├── n8n/                  # n8n setup scripts
-│   ├── gitea/                # gitea setup scripts
+│   ├── proxmox-nat/          # NAT port forwarding manager
+│   ├── prometheus-grafana/   # Monitoring stack
+│   ├── ntfy/                 # ntfy setup scripts (planned)
+│   ├── n8n/                  # n8n setup scripts (planned)
+│   ├── gitea/                # gitea setup scripts (planned)
 │   └── README.md            # App installation guide
 ├── scripts/                  # Utility scripts
 │   ├── backup.sh            # Backup utilities
@@ -76,6 +78,74 @@ The repository contains production-ready, modular setup scripts:
 **Documentation:**
 - Multiple markdown and text files documenting the VM setup workflow in `docs/`
 
+### NAT Manager for Proxmox (v1.0.0)
+
+A comprehensive NAT port forwarding management tool for Proxmox servers with a single public IPv4 address.
+
+**Key Features:**
+- ✅ Modern web-based dashboard (Flask + Bootstrap)
+- ✅ Command-line interface for automation
+- ✅ Automatic port assignment (starting from 50000)
+- ✅ Pre-configured default ports (SSH:22, HTTP:80, HTTPS:443, 8080)
+- ✅ Real-time statistics and monitoring
+- ✅ Backup/restore functionality
+- ✅ Import/export configuration as JSON
+- ✅ Port reservation system
+- ✅ Database rebuild from existing iptables rules
+- ✅ Systemd services for auto-start and rule restoration
+- ✅ Comprehensive logging
+
+**Components:**
+- **nat_manager.py**: Core Python script with configuration file support
+- **web/app.py**: Flask-based REST API and web interface
+- **web/templates/**: Responsive Bootstrap-based dashboard
+- **web/static/**: CSS and JavaScript for interactive UI
+- **setup.sh**: Automated installation with dependency management
+- **uninstall.sh**: Clean removal with optional data preservation
+- **systemd services**: Auto-start web UI and restore iptables on boot
+
+**Installation:**
+```bash
+cd apps/proxmox-nat
+sudo bash setup.sh
+# Access web UI at http://your-server:8888
+```
+
+**Use Cases:**
+- Managing NAT port forwarding for multiple VMs/containers
+- Proxmox servers with single public IPv4 address
+- Simplifying iptables NAT rule management
+- Providing non-technical users with GUI for port management
+
+**Documentation:**
+- **README.md**: Comprehensive guide with examples and troubleshooting (540 lines)
+- **QUICKSTART.md**: 5-minute getting started guide
+
+### Monitoring Stack (Prometheus + Grafana)
+
+Production-ready monitoring solution with metrics collection and visualization.
+
+**Components:**
+- Prometheus for metrics collection
+- Grafana for visualization
+- Pre-configured dashboards
+- Docker Compose based deployment
+
+## Completed Additions
+
+### Infrastructure Tools
+
+1. **NAT Manager** ✅ - Port forwarding management for Proxmox
+   - Web-based dashboard
+   - CLI interface
+   - Automatic port assignment
+   - Backup/restore functionality
+
+2. **Prometheus + Grafana** ✅ - Monitoring stack
+   - Metrics collection
+   - Visualization dashboards
+   - Docker-based deployment
+
 ## Planned Additions
 
 ### Self-Hosted Applications
@@ -114,34 +184,116 @@ The repository contains production-ready, modular setup scripts:
 
 ### Adding New Services
 
-When adding a new self-hosted service:
+When adding a new self-hosted service, choose the appropriate deployment method:
 
-1. Create a directory under `apps/` and `docker-compose/`
+#### Docker Compose Services
+
+For containerized applications:
+
+1. Create a directory under `docker-compose/SERVICE_NAME/`
 2. Include:
    - `docker-compose.yml` - Docker Compose configuration
    - `README.md` - Service-specific documentation
    - `.env.example` - Environment variable template
-   - `setup.sh` - Installation/setup script (if needed)
-   - `backup.sh` - Backup script (if applicable)
+   - Configuration files as needed
 
 3. Update main README.md with the new service
 
+#### Native/Python Applications
+
+For native applications (like NAT Manager):
+
+1. Create a directory under `apps/SERVICE_NAME/`
+2. Include:
+   - Main script(s) (e.g., `service_manager.py`)
+   - `web/` directory for web-based interfaces (if applicable)
+     - `app.py` - Flask/web framework entry point
+     - `templates/` - HTML templates
+     - `static/` - CSS, JavaScript, images
+   - `config/` directory with `.example` configuration files
+   - `systemd/` directory with service files
+   - `setup.sh` - Automated installation script
+   - `uninstall.sh` - Clean removal script
+   - `requirements.txt` - Python dependencies
+   - `README.md` - Comprehensive documentation
+   - `QUICKSTART.md` - Quick start guide (optional but recommended)
+
+3. Update main README.md and CLAUDE.md with the new service
+
+**Example Structure (Python Web Application):**
+```
+apps/my-service/
+├── my_service.py              # Core functionality
+├── web/                       # Web interface
+│   ├── app.py                # Flask application
+│   ├── templates/
+│   │   └── index.html
+│   └── static/
+│       ├── css/style.css
+│       └── js/app.js
+├── config/
+│   └── config.json.example
+├── systemd/
+│   ├── my-service-web.service
+│   └── my-service-restore.service
+├── setup.sh
+├── uninstall.sh
+├── requirements.txt
+├── README.md
+└── QUICKSTART.md
+```
+
 ### Best Practices
 
+**General:**
+- Include comprehensive README files with examples
+- Add example configurations (`.example` files)
+- Document prerequisites and dependencies
+- Include troubleshooting sections
+- Version control everything except secrets
+- Provide both quick start and detailed documentation
+
+**Docker Compose Services:**
 - Keep docker-compose files production-ready
 - Use environment variables for sensitive data
-- Include comprehensive README files
-- Add example configurations
-- Document prerequisites
-- Include troubleshooting steps
-- Version control everything except secrets
+- Include health checks
+- Set resource limits
+- Use named volumes for data persistence
+
+**Python/Flask Web Applications:**
+- Use virtual environments (`venv`)
+- Provide `requirements.txt` with pinned versions
+- Support configuration via JSON/environment variables
+- Include systemd service files for production deployment
+- Run as appropriate user (root only when necessary, e.g., iptables)
+- Implement proper logging (file + stdout)
+- Add error handling and user-friendly error messages
+- Use Bootstrap or similar framework for consistent UI
+- Provide REST API endpoints for programmatic access
+- Include both CLI and web interfaces when applicable
 
 ### Testing
 
+**Shell Scripts:**
 - Test all scripts on fresh Ubuntu/Debian installations
+- Verify scripts are idempotent (safe to run multiple times)
+- Test dry-run modes where applicable
+- Run shellcheck for syntax validation
+
+**Docker Compose Services:**
 - Verify Docker Compose files work in isolation
 - Check all environment variables are documented
-- Ensure scripts are idempotent where possible
+- Test service health checks
+- Verify persistent data survives container restarts
+
+**Python Web Applications:**
+- Test installation script on clean system
+- Verify systemd services start and stop correctly
+- Test web UI in multiple browsers
+- Verify CLI commands work as expected
+- Test configuration file loading
+- Verify logging is working correctly
+- Test uninstall script preserves/removes data as expected
 
 ## Development Branch
 
@@ -176,12 +328,35 @@ This repository uses feature branches for development:
 
 ## Common Tasks
 
-### Deploy a new service
+### Deploy a Docker Compose service
 ```bash
 cd docker-compose/SERVICE_NAME
 cp .env.example .env
 # Edit .env with your configuration
 docker-compose up -d
+```
+
+### Deploy a Python web application (e.g., NAT Manager)
+```bash
+cd apps/SERVICE_NAME
+sudo bash setup.sh
+# Follow interactive prompts
+# Access web UI as shown in output
+```
+
+### Manage Python web application services
+```bash
+# Check status
+systemctl status nat-manager-web
+
+# View logs
+journalctl -u nat-manager-web -f
+
+# Restart service
+systemctl restart nat-manager-web
+
+# Stop service
+systemctl stop nat-manager-web
 ```
 
 ### Run base setup on new server
@@ -201,6 +376,7 @@ curl -fsSL https://raw.githubusercontent.com/USER/server-steups/main/base/setup.
 
 ## Security Notes
 
+**General:**
 - Never commit `.env` files with real secrets
 - Always use `.env.example` as templates
 - Store secrets in secure vaults (not in git)
@@ -208,6 +384,22 @@ curl -fsSL https://raw.githubusercontent.com/USER/server-steups/main/base/setup.
 - Keep systems and containers updated
 - Enable firewall rules
 - Use HTTPS/TLS for all services
+
+**Web Applications:**
+- Restrict web UI access using firewall rules (ufw, iptables)
+- Use SSH tunneling for remote access when possible
+- Run web services as non-root when possible (except when system operations require it)
+- Implement rate limiting on API endpoints
+- Add authentication for production deployments
+- Use HTTPS/TLS with reverse proxy (Caddy, Nginx, Traefik)
+- Keep Flask and dependencies updated
+- Set secure session cookies (httponly, secure, samesite)
+
+**For Single-User/Personal Deployments:**
+- Default configurations prioritize ease of use over enterprise security
+- Web UIs may run without authentication for convenience
+- Ensure proper network segmentation (private network only)
+- Use SSH tunneling or VPN for access from outside trusted network
 
 ## Shell Script Best Practices
 
