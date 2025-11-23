@@ -1,0 +1,112 @@
+# Self-Hosted Applications Example
+# Popular self-hosted apps with Caddy reverse proxy
+
+{
+    email admin@example.com
+}
+
+# Nextcloud
+cloud.example.com {
+    reverse_proxy localhost:8080
+
+    # Nextcloud specific headers
+    header {
+        Strict-Transport-Security "max-age=31536000;"
+    }
+
+    # Support large file uploads
+    request_body {
+        max_size 10GB
+    }
+}
+
+# Gitea
+git.example.com {
+    reverse_proxy localhost:3000
+}
+
+# n8n (workflow automation)
+n8n.example.com {
+    reverse_proxy localhost:5678
+}
+
+# ntfy (notification service)
+ntfy.example.com {
+    reverse_proxy localhost:8080
+}
+
+# Grafana (monitoring)
+grafana.example.com {
+    reverse_proxy localhost:3001
+}
+
+# Prometheus (metrics)
+prometheus.example.com {
+    reverse_proxy localhost:9090
+
+    # Restrict access to internal network
+    @internal {
+        remote_ip 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+    }
+    handle @internal {
+        reverse_proxy localhost:9090
+    }
+    handle {
+        abort
+    }
+}
+
+# Vaultwarden (password manager)
+vault.example.com {
+    reverse_proxy localhost:8080
+
+    # Security headers for password manager
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+    }
+
+    # WebSocket support for real-time sync
+    reverse_proxy /notifications/hub localhost:3012
+}
+
+# Jellyfin (media server)
+media.example.com {
+    reverse_proxy localhost:8096
+
+    # Large streaming files
+    request_body {
+        max_size 20GB
+    }
+}
+
+# Portainer (Docker management)
+docker.example.com {
+    reverse_proxy localhost:9000
+}
+
+# Uptime Kuma (monitoring)
+status.example.com {
+    reverse_proxy localhost:3001
+}
+
+# Home Assistant
+home.example.com {
+    reverse_proxy localhost:8123
+}
+
+# Bookstack (wiki/documentation)
+wiki.example.com {
+    reverse_proxy localhost:8080
+}
+
+# Photoprism (photo management)
+photos.example.com {
+    reverse_proxy localhost:2342
+
+    # Large photo uploads
+    request_body {
+        max_size 5GB
+    }
+}

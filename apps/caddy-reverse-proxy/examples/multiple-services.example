@@ -1,0 +1,54 @@
+# Multiple Services with Subdomains Example
+# Different services on different subdomains
+
+{
+    email admin@example.com
+}
+
+# Main website
+example.com {
+    reverse_proxy localhost:3000
+}
+
+# Blog
+blog.example.com {
+    reverse_proxy localhost:4000
+}
+
+# API service
+api.example.com {
+    reverse_proxy localhost:5000
+
+    # Add CORS headers for API
+    header {
+        Access-Control-Allow-Origin *
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+}
+
+# Admin panel (with IP restriction)
+admin.example.com {
+    reverse_proxy localhost:6000
+
+    # Only allow access from specific IPs
+    @allowed {
+        remote_ip 192.168.1.0/24 10.0.0.0/8
+    }
+    handle @allowed {
+        reverse_proxy localhost:6000
+    }
+    handle {
+        abort
+    }
+}
+
+# Monitoring (Grafana)
+monitoring.example.com {
+    reverse_proxy localhost:3001
+}
+
+# File storage (Nextcloud)
+files.example.com {
+    reverse_proxy localhost:8080
+}

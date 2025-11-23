@@ -1,0 +1,43 @@
+# File Server Example
+# Serving static files with directory browsing
+
+{
+    email admin@example.com
+}
+
+# Simple file server with directory browsing
+files.example.com {
+    root * /var/www/files
+    file_server browse
+}
+
+# File server without browsing (direct links only)
+downloads.example.com {
+    root * /var/www/downloads
+    file_server
+}
+
+# Combined: reverse proxy with static files
+app.example.com {
+    # Serve static assets from /static path
+    handle /static/* {
+        root * /var/www/static
+        file_server
+    }
+
+    # Proxy everything else to the application
+    handle {
+        reverse_proxy localhost:3000
+    }
+}
+
+# File server with upload support (WebDAV)
+webdav.example.com {
+    root * /var/www/webdav
+    webdav {
+        prefix /
+    }
+    basicauth {
+        admin $2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG  # username: admin, password: changeme
+    }
+}

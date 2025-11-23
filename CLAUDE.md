@@ -29,6 +29,7 @@ server-steups/
 ├── apps/                     # Self-hosted app installation scripts
 │   ├── proxmox-nat/          # NAT port forwarding manager
 │   ├── prometheus-grafana/   # Monitoring stack
+│   ├── caddy-reverse-proxy/  # Caddy reverse proxy setup
 │   ├── ntfy/                 # ntfy setup scripts (planned)
 │   ├── n8n/                  # n8n setup scripts (planned)
 │   ├── gitea/                # gitea setup scripts (planned)
@@ -131,6 +132,57 @@ Production-ready monitoring solution with metrics collection and visualization.
 - Pre-configured dashboards
 - Docker Compose based deployment
 
+### Caddy Reverse Proxy (v1.0.0)
+
+A dead simple yet effective Caddy reverse proxy setup for self-hosted applications and services.
+
+**Key Features:**
+- ✅ One-command installation
+- ✅ Automatic HTTPS with Let's Encrypt
+- ✅ Zero-downtime configuration reloads
+- ✅ Reverse proxy to local services and Docker containers
+- ✅ WebSocket support (automatic)
+- ✅ Load balancing capabilities
+- ✅ File server with directory browsing
+- ✅ Path-based routing
+- ✅ Basic authentication support
+- ✅ Custom headers and security policies
+- ✅ IP-based access restrictions
+- ✅ HTTP/2 and HTTP/3 support
+
+**Components:**
+- **setup.sh**: Automated installation from official Caddy repository
+- **uninstall.sh**: Clean removal with optional data preservation
+- **examples/**: Seven comprehensive example Caddyfiles covering:
+  - Basic reverse proxy
+  - Docker services integration
+  - Multiple services with subdomains
+  - WebSocket applications
+  - File server configurations
+  - Advanced features (load balancing, custom headers, logging)
+  - Popular self-hosted applications (Nextcloud, Gitea, Grafana, etc.)
+
+**Installation:**
+```bash
+cd apps/caddy-reverse-proxy
+sudo bash setup.sh
+# Edit /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+**Use Cases:**
+- Reverse proxy for self-hosted applications
+- Automatic HTTPS for multiple services
+- Load balancing across multiple backends
+- Serving static files with or without browsing
+- WebSocket applications (real-time apps, Socket.io)
+- Path-based routing to different services
+- Protecting services with basic authentication or IP restrictions
+
+**Documentation:**
+- **README.md**: Comprehensive guide with 10 common use cases and troubleshooting (600+ lines)
+- **QUICKSTART.md**: Get up and running in 5 minutes
+
 ## Completed Additions
 
 ### Infrastructure Tools
@@ -145,6 +197,12 @@ Production-ready monitoring solution with metrics collection and visualization.
    - Metrics collection
    - Visualization dashboards
    - Docker-based deployment
+
+3. **Caddy Reverse Proxy** ✅ - Automatic HTTPS reverse proxy
+   - One-command installation
+   - Automatic Let's Encrypt certificates
+   - Docker container support
+   - Comprehensive example configurations
 
 ## Planned Additions
 
@@ -170,12 +228,11 @@ Production-ready monitoring solution with metrics collection and visualization.
    - Vaultwarden (password manager)
    - Nextcloud (file sync)
    - Jellyfin (media server)
-   - Traefik/Caddy (reverse proxy)
+   - Traefik (alternative reverse proxy)
 
 ### Infrastructure Scripts
 
-- SSL certificate management (Let's Encrypt)
-- Automated backups
+- Automated backups (enhanced version)
 - System monitoring setup
 - Log aggregation
 - Security hardening scripts

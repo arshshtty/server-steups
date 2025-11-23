@@ -1,0 +1,35 @@
+# WebSocket Support Example
+# For applications that require WebSocket connections
+
+{
+    email admin@example.com
+}
+
+# WebSocket application (e.g., real-time chat, notifications)
+ws.example.com {
+    reverse_proxy localhost:8080 {
+        # WebSocket support is automatic in Caddy 2.x
+        # No special configuration needed
+    }
+}
+
+# Socket.io application
+socketio.example.com {
+    reverse_proxy localhost:3000
+
+    # Socket.io specific headers
+    header {
+        Connection "Upgrade"
+        Upgrade "websocket"
+    }
+}
+
+# Home Assistant (requires WebSocket)
+homeassistant.example.com {
+    reverse_proxy localhost:8123
+}
+
+# VS Code Server / code-server
+code.example.com {
+    reverse_proxy localhost:8443
+}
