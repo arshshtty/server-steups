@@ -1,0 +1,26 @@
+{
+  "app.example.com": {
+    "domain": "app.example.com",
+    "backend": "localhost:3000",
+    "ssl": true,
+    "websocket": false,
+    "created": "2025-01-15T10:30:00Z",
+    "enabled": true
+  },
+  "api.example.com": {
+    "domain": "api.example.com",
+    "backend": "192.168.1.100:8080",
+    "ssl": true,
+    "websocket": false,
+    "created": "2025-01-15T11:00:00Z",
+    "enabled": true
+  },
+  "chat.example.com": {
+    "domain": "chat.example.com",
+    "backend": "localhost:8080",
+    "ssl": true,
+    "websocket": true,
+    "created": "2025-01-15T11:30:00Z",
+    "enabled": true
+  }
+}
