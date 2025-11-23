@@ -1,0 +1,13 @@
+[Unit]
+Description=NAT Manager - Restore iptables rules on boot
+After=network.target
+Before=nat-manager-web.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables-restore /etc/iptables/rules.v4
+ExecStartPost=/usr/sbin/sysctl -w net.ipv4.ip_forward=1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

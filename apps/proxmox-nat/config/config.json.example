@@ -1,0 +1,8 @@
+{
+  "port_start": 50000,
+  "db_file": "/etc/nat_manager/port_mappings.db",
+  "network_interface": "vmbr0",
+  "backup_dir": "/etc/nat_manager/backups",
+  "log_file": "/var/log/nat_manager.log",
+  "log_level": "INFO"
+}

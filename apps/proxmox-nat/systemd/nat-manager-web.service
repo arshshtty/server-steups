@@ -1,0 +1,17 @@
+[Unit]
+Description=NAT Manager Web UI
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/nat-manager/web
+Environment="NAT_CONFIG=/etc/nat_manager/config.json"
+Environment="NAT_WEB_HOST=0.0.0.0"
+Environment="NAT_WEB_PORT=8888"
+ExecStart=/opt/nat-manager/venv/bin/python /opt/nat-manager/web/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
