@@ -29,6 +29,7 @@ server-steups/
 ├── apps/                     # Self-hosted app installation scripts
 │   ├── proxmox-nat/          # NAT port forwarding manager
 │   ├── prometheus-grafana/   # Monitoring stack
+│   ├── nginx-proxy/          # Nginx reverse proxy manager
 │   ├── ntfy/                 # ntfy setup scripts (planned)
 │   ├── n8n/                  # n8n setup scripts (planned)
 │   ├── gitea/                # gitea setup scripts (planned)
@@ -131,6 +132,59 @@ Production-ready monitoring solution with metrics collection and visualization.
 - Pre-configured dashboards
 - Docker Compose based deployment
 
+### Nginx Reverse Proxy Manager (v1.0.0)
+
+A dead simple yet effective CLI tool for managing Nginx reverse proxy configurations.
+
+**Key Features:**
+- ✅ Dead simple CLI interface
+- ✅ Automatic SSL/TLS with Let's Encrypt integration
+- ✅ WebSocket support for real-time applications
+- ✅ Configuration management in JSON format
+- ✅ Zero-downtime Nginx reloads
+- ✅ Pre-configured security headers
+- ✅ Automatic firewall configuration (UFW)
+- ✅ Per-domain access and error logs
+- ✅ One-command proxy setup
+
+**Components:**
+- **nginx-proxy**: Main bash script for CLI management
+- **setup.sh**: Automated installation with dependency management
+- **uninstall.sh**: Clean removal with optional data preservation
+- **config/**: Configuration templates and examples
+
+**Installation:**
+```bash
+cd apps/nginx-proxy
+sudo bash setup.sh
+```
+
+**Quick Usage:**
+```bash
+# Add a reverse proxy
+sudo nginx-proxy add myapp.com localhost:3000
+
+# Enable SSL with Let's Encrypt
+sudo nginx-proxy enable-ssl myapp.com admin@example.com
+
+# List all proxies
+nginx-proxy list
+
+# Remove a proxy
+sudo nginx-proxy remove myapp.com
+```
+
+**Use Cases:**
+- Exposing multiple self-hosted applications on different subdomains
+- Proxying to Docker containers or VMs
+- Quick reverse proxy setup for homelab services
+- SSL/TLS termination with automatic certificate renewal
+- WebSocket proxy for real-time applications (n8n, Home Assistant, etc.)
+
+**Documentation:**
+- **README.md**: Comprehensive guide with examples and troubleshooting
+- **QUICKSTART.md**: 5-minute getting started guide
+
 ## Completed Additions
 
 ### Infrastructure Tools
@@ -145,6 +199,12 @@ Production-ready monitoring solution with metrics collection and visualization.
    - Metrics collection
    - Visualization dashboards
    - Docker-based deployment
+
+3. **Nginx Reverse Proxy Manager** ✅ - Simple reverse proxy management
+   - CLI-based management
+   - Automatic SSL with Let's Encrypt
+   - WebSocket support
+   - One-command proxy setup
 
 ## Planned Additions
 
@@ -170,11 +230,9 @@ Production-ready monitoring solution with metrics collection and visualization.
    - Vaultwarden (password manager)
    - Nextcloud (file sync)
    - Jellyfin (media server)
-   - Traefik/Caddy (reverse proxy)
 
 ### Infrastructure Scripts
 
-- SSL certificate management (Let's Encrypt)
 - Automated backups
 - System monitoring setup
 - Log aggregation
